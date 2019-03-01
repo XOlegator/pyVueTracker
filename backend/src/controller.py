@@ -368,8 +368,6 @@ class ApiController:
         if link is None:
             return None
 
-        s = Sheduler()
-
         comment = ''
         title = None
 
@@ -395,6 +393,6 @@ class ApiController:
             category_id=9  # разработка
         )
 
-        result = s.export(link, activity)
-
-        self.response.status = result > 0
+        result = self.engine.export_activity(link, activity)
+        self.response.export_result = result
+        self.response.status = result == 'new'
