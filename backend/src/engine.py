@@ -510,21 +510,29 @@ class Engine:
         if self.is_task_uploaded_in_tracker(activity.id, link.tracker.id):
             return 'exist'
 
-        # запросим суммарное время по задаче на дату активности на трекере и из БД
-        ext_time = self.get_task_time_by_date_for_tracker_link(link, activity.task_id, activity.date)
-        db_time = self.get_task_time_by_date_for_db(activity.task_id, activity.date)
-        delta_time = db_time - ext_time
-        if abs(delta_time) < 0.05:
-            delta_time = 0
+        # если есть номер задачи - проверим трекер
+        if activity.task_id > 0:
+            # запросим суммарное время по задаче на дату активности на трекере и из БД
+            ext_time = self.get_task_time_by_date_for_tracker_link(link, activity.task_id, activity.date)
+            db_time = self.get_task_time_by_date_for_db(activity.task_id, activity.date)
+            delta_time = db_time - ext_time
+            if abs(delta_time) < 0.05:
+                delta_time = 0
 
-        if delta_time == 0:  # время на трекере и в БД всовпадает - все активности синхронизированы
-            return 'exist'
+            if delta_time == 0:  # время на трекере и в БД всовпадает - все активности синхронизированы
+                return 'exist'
 
-        if db_time < 0:  # время в БД меньше, чем на трекере - какая-то активность создана в обход БД
-            # todo импортируем активности с трекера в БД
-            return 'partial'
+            if db_time < 0:  # время в БД меньше, чем на трекере - какая-то активность создана в обход БД
+                # todo импортируем активности с трекера в БД
+                return 'partial'
 
-        # время в БД больше, чем на трекере - выгружаем активность
+            # время в БД больше, чем на трекере - выгружаем активность
+
+        # запрешаем выгрузку на redmine без task_id
+        if link.tracker.type == 'redmine' and activity.task_id < 1:
+            return None  # ошибка
+
+        # выгружаем активность
         api = TrackerModel.get_api(link.tracker.type, link.tracker.api_url, link.external_api_key)
         if api.is_auth() is False or api.new_activity(activity) is None:
             return None  # ошибка
