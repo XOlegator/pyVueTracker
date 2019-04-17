@@ -476,8 +476,8 @@ class Engine:
                 ext_time += ext_activity.time
         return ext_time
 
-    def is_task_uploaded_in_tracker(self, task_id: int, tracker_id: int):
-        activity = self.__get_fact_by_id(task_id)  # type: Activity
+    def is_task_uploaded_in_tracker(self, activity_id: int, tracker_id: int):
+        activity = self.__get_fact_by_id(activity_id)  # type: Activity
         if activity is None:
             return None
 
